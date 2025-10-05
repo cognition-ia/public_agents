@@ -1,0 +1,20 @@
+# agents/requirements.txt
+# Core
+python-dotenv>=1.0
+pydantic>=2.7
+httpx>=0.27
+
+# LLM / OpenAI
+openai>=1.40
+
+# Agno (framework de agentes) — ajuste conforme o pacote PyPI usado no seu ambiente
+agno>=0.1
+
+# Supabase e Postgres
+supabase>=2.6
+psycopg[binary]>=3.2
+
+# APIs e Notebooks (opcionais)
+fastapi>=0.112
+uvicorn[standard]>=0.30
+jupyterlab>=4.2

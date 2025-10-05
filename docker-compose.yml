@@ -1,0 +1,61 @@
+# agents/docker-compose.yml
+version: "3.9"
+services:
+  app:
+    build: .
+    container_name: agents_app
+    env_file:
+      - .env
+    volumes:
+      - ./:/app:rw
+    working_dir: /app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:8000"   # FastAPI (opcional)
+      - "127.0.0.1:8888:8888"   # JupyterLab (opcional)
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import sys; sys.exit(0)'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: agents_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agents}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-agents}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: agents_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    depends_on:
+      - db
+    ports:
+      - "127.0.0.1:5050:80"
+    restart: unless-stopped
+
+  # Supabase local opcional (auth/storage/realtime) controlado por script
+  # Recomenda-se usar scripts/supabase_local.sh (usa supabase/cli) para subir/derrubar
+  # e publicar as portas padrão (54321: API; 54322: Postgres Supabase)
+  # A app pode apontar para SUPABASE_URL=http://localhost:54321 quando ativo.
+
+volumes:
+  postgres-data:
